@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planes Flock</title>
+
+    <style>
+      * {
+        font-family: "Arial", sans-serif;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      canvas {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        background-color: black;
+      }
+
+      h1 {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        z-index: 1;
+        transform: translate(-50%, -50%);
+
+        color: white;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>PAPER PLANES FLOCK (PPF)</h1>
+
+    <canvas></canvas>
+
+    <script src="p5.min.js"></script>
+    <script src="Paperplane.js"></script>
+
+    <script>
+      let paperplanes = [];
+
+      function setup() {
+        const canvas = createCanvas(594, 841, WEBGL);
+
+        const START_X = -width / 2;
+        const START_Y = -height / 2;
+
+        const MARGIN_TOP = 30;
+        const MARGIN_LEFT = 30;
+
+        const SPACING_X = 20;
+        const SPACING_Y = 20;
+
+        // const NUMBER_OF_PLANES = 380;
+        const NUMBER_OF_PLANES = 1;
+        const NUMBER_OF_COLUMNS = 19;
+
+        for (let i = 0; i < NUMBER_OF_PLANES; i++) {
+          const columnIndex = Math.floor(i / NUMBER_OF_COLUMNS);
+          const rowIndex = i % NUMBER_OF_COLUMNS;
+
+          const x =
+            START_X + MARGIN_LEFT + (Paperplane.width + SPACING_X) * rowIndex;
+          const y =
+            START_Y +
+            MARGIN_TOP +
+            (Paperplane.height + SPACING_Y) * columnIndex;
+
+          const paperplane = new Paperplane(x, y);
+
+          paperplanes.push(paperplane);
+        }
+
+        canvas.mousePressed(() => {
+          paperplanes.forEach((paperplane) => {
+            paperplane.setType("paperplane");
+          });
+        });
+
+        canvas.mouseReleased(() => {
+          paperplanes.forEach((paperplane) => {
+            paperplane.setType("point");
+          });
+        });
+      }
+
+      function draw() {
+        background(0);
+
+        paperplanes.forEach((paperplane) => {
+          paperplane.show();
+        });
+      }
+    </script>
+  </body>
+</html>
