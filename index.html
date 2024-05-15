@@ -56,6 +56,9 @@
         const START_X = -width / 2;
         const START_Y = -height / 2;
 
+        console.log(width, height);
+        console.log(START_X, START_Y);
+
         const MARGIN_TOP = 30;
         const MARGIN_LEFT = 30;
 
@@ -63,7 +66,7 @@
         const SPACING_Y = 20;
 
         // const NUMBER_OF_PLANES = 380;
-        const NUMBER_OF_PLANES = 1;
+        const NUMBER_OF_PLANES = 380;
         const NUMBER_OF_COLUMNS = 19;
 
         for (let i = 0; i < NUMBER_OF_PLANES; i++) {
@@ -81,24 +84,13 @@
 
           paperplanes.push(paperplane);
         }
-
-        canvas.mousePressed(() => {
-          paperplanes.forEach((paperplane) => {
-            paperplane.setType("paperplane");
-          });
-        });
-
-        canvas.mouseReleased(() => {
-          paperplanes.forEach((paperplane) => {
-            paperplane.setType("point");
-          });
-        });
       }
 
       function draw() {
         background(0);
 
         paperplanes.forEach((paperplane) => {
+          paperplane.update();
           paperplane.show();
         });
       }
