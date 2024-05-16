@@ -54,51 +54,35 @@ class Paperplane {
       0
     );
 
+    const INNER_TAIL_LENGTH = 3;
+
+    console.log(leftPoint);
+    console.log(leftPoint.x);
+
+    const innerTailPoint = createVector(
+      lerp(leftPoint.x, rightPoint.x, 0.5) + this.position.x,
+      topPoint.y + Paperplane.height - INNER_TAIL_LENGTH + this.position.y
+    );
+
     const vertices = [];
 
-    vertices.push(topPoint);
-    vertices.push(leftPoint);
-    vertices.push(rightPoint);
+    const restVerticesLength = Paperplane.numberOfVertices - 3;
+    const NUMBER_OF_LINES = 3;
 
-    // add vertices for the tail
-    const tailPoint1 = createVector(
-      -Paperplane.width + this.position.x,
-      Paperplane.height / 2 + this.position.y,
-      0
-    );
-    const tailPoint2 = createVector(
-      -Paperplane.width + this.position.x,
-      -Paperplane.height / 2 + this.position.y,
-      0
-    );
-    const tailPoint3 = createVector(
-      -Paperplane.width * 1.5 + this.position.x,
-      0 + this.position.y,
-      0
+    vertices.push(
+      topPoint,
+      rightPoint,
+      p5.Vector.lerp(rightPoint, leftPoint, 0.1),
+      p5.Vector.lerp(rightPoint, leftPoint, 0.2),
+      p5.Vector.lerp(rightPoint, leftPoint, 0.3),
+      innerTailPoint,
+      p5.Vector.lerp(rightPoint, leftPoint, 0.5),
+      p5.Vector.lerp(rightPoint, leftPoint, 0.6),
+      p5.Vector.lerp(rightPoint, leftPoint, 0.7),
+      leftPoint
     );
 
-    vertices.push(tailPoint1);
-    vertices.push(tailPoint2);
-    vertices.push(tailPoint3);
-
-    // push other vertices to complete the paperplane same as the length of the number of vertices of circle
-    for (let i = 0; i < Paperplane.numberOfVertices - 6; i++) {
-      // x and y are on the line of the shape of the paperplane
-      const x = lerp(
-        leftPoint.x,
-        rightPoint.x,
-        (i + 1) / (Paperplane.numberOfVertices - 6)
-      );
-      const y = lerp(
-        leftPoint.y,
-        rightPoint.y,
-        (i + 1) / (Paperplane.numberOfVertices - 6)
-      );
-
-      const vector = createVector(x, y, 0);
-
-      vertices.push(vector);
-    }
+    console.log(vertices);
 
     return vertices;
   }
