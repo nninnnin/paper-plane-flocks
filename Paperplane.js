@@ -54,51 +54,27 @@ class Paperplane {
       0
     );
 
+    const INNER_TAIL_LENGTH = 10;
+
+    const innerTailPoint = createVector(
+      lerp(leftPoint.x, rightPoint.x, 0.5),
+      topPoint.y + Paperplane.height - INNER_TAIL_LENGTH
+    );
+
     const vertices = [];
 
-    vertices.push(topPoint);
-    vertices.push(leftPoint);
-    vertices.push(rightPoint);
-
-    // add vertices for the tail
-    const tailPoint1 = createVector(
-      -Paperplane.width + this.position.x,
-      Paperplane.height / 2 + this.position.y,
-      0
+    vertices.push(
+      topPoint,
+      rightPoint,
+      innerTailPoint,
+      p5.Vector.lerp(innerTailPoint, leftPoint, 0.1),
+      p5.Vector.lerp(innerTailPoint, leftPoint, 0.2),
+      p5.Vector.lerp(innerTailPoint, leftPoint, 0.3),
+      p5.Vector.lerp(innerTailPoint, leftPoint, 0.5),
+      p5.Vector.lerp(innerTailPoint, leftPoint, 0.6),
+      p5.Vector.lerp(innerTailPoint, leftPoint, 0.7),
+      leftPoint
     );
-    const tailPoint2 = createVector(
-      -Paperplane.width + this.position.x,
-      -Paperplane.height / 2 + this.position.y,
-      0
-    );
-    const tailPoint3 = createVector(
-      -Paperplane.width * 1.5 + this.position.x,
-      0 + this.position.y,
-      0
-    );
-
-    vertices.push(tailPoint1);
-    vertices.push(tailPoint2);
-    vertices.push(tailPoint3);
-
-    // push other vertices to complete the paperplane same as the length of the number of vertices of circle
-    for (let i = 0; i < Paperplane.numberOfVertices - 6; i++) {
-      // x and y are on the line of the shape of the paperplane
-      const x = lerp(
-        leftPoint.x,
-        rightPoint.x,
-        (i + 1) / (Paperplane.numberOfVertices - 6)
-      );
-      const y = lerp(
-        leftPoint.y,
-        rightPoint.y,
-        (i + 1) / (Paperplane.numberOfVertices - 6)
-      );
-
-      const vector = createVector(x, y, 0);
-
-      vertices.push(vector);
-    }
 
     return vertices;
   }
@@ -151,14 +127,33 @@ class Paperplane {
     const webGLMouseX = mouseX - width / 2;
     const webGLMouseY = mouseY - height / 2;
 
+    // console.log(webGLMouseX, webGLMouseY);
+
+    push();
+    strokeWeight(10);
+    // set pointColor
+    stroke(255, 0, 0);
+    point(webGLMouseX, webGLMouseY);
+    pop();
+
     const distance = dist(x, y, webGLMouseX, webGLMouseY);
 
-    const isMouseIn = distance < 50;
+    const isMouseInCanvas = mouseX > 0 && mouseY > 0;
+
+    if (!isMouseInCanvas) {
+      return false;
+    }
+
+    const isMouseIn = distance < 80;
 
     if (isMouseIn) {
+      // mouse in 당시의 마우스 x 위치와 캔버스의 중심 x 위치를 비교하여 각도를 계산
+      const angle = atan2(webGLMouseY - y, webGLMouseX - x);
+      this.angle = angle;
+
       this.setType("paperplane");
     } else {
-      this.setType("point");
+      // this.setType("point");
     }
 
     return isMouseIn;
@@ -174,5 +169,10 @@ class Paperplane {
 
   update() {
     this.checkToMouseIn();
+    this.rotate();
+  }
+
+  rotate() {
+    rotateY(this.angle);
   }
 }
