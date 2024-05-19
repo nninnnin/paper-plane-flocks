@@ -7,6 +7,9 @@ class Paperplane {
     this.position = createVector(x, y, 0);
 
     this.angle = 0;
+    this.mouseInPosition = createVector(0, 0);
+    this.mouseOutPosition = createVector(0, 0);
+
     this.type = "point";
 
     this.setVertices();
@@ -26,8 +29,8 @@ class Paperplane {
 
     for (let i = 0; i < Paperplane.numberOfVertices; i++) {
       const angle = (TWO_PI / Paperplane.numberOfVertices) * i;
-      const x = cos(angle) * CIRCLE_RADIUS + this.position.x;
-      const y = sin(angle) * CIRCLE_RADIUS + this.position.y;
+      const x = cos(angle) * CIRCLE_RADIUS;
+      const y = sin(angle) * CIRCLE_RADIUS;
 
       const vector = createVector(x, y, 0);
 
@@ -38,21 +41,9 @@ class Paperplane {
   }
 
   createPaperplaneVertices() {
-    const topPoint = createVector(
-      0 + this.position.x,
-      -Paperplane.height / 2 + this.position.y,
-      0
-    );
-    const leftPoint = createVector(
-      -Paperplane.width + this.position.x,
-      Paperplane.height / 2 + this.position.y,
-      0
-    );
-    const rightPoint = createVector(
-      Paperplane.width + this.position.x,
-      Paperplane.height / 2 + this.position.y,
-      0
-    );
+    const topPoint = createVector(0, -Paperplane.height / 2, 0);
+    const leftPoint = createVector(-Paperplane.width, Paperplane.height / 2, 0);
+    const rightPoint = createVector(Paperplane.width, Paperplane.height / 2, 0);
 
     const INNER_TAIL_LENGTH = 10;
 
@@ -147,32 +138,40 @@ class Paperplane {
     const isMouseIn = distance < 80;
 
     if (isMouseIn) {
-      // mouse in 당시의 마우스 'x' 위치와 캔버스의 중심 'x' 위치를 비교하여 각도를 계산
-      // const angle = atan2(webGLMouseY - y, webGLMouseX - x);
-      // this.angle = angle;
-
       this.setType("paperplane");
-    } else {
-      // this.setType("point");
+      this.mouseInPosition = createVector(webGLMouseX, webGLMouseY);
+    } else if (this.type === "paperplane") {
+      this.setType("point");
+      this.mouseOutPosition = createVector(webGLMouseX, webGLMouseY);
+
+      const dx = this.mouseOutPosition.x - this.mouseInPosition.x;
+      const dy = this.mouseOutPosition.y - this.mouseInPosition.y;
+
+      // this.angle = atan2(dy, dx);
+      // this.angle = 90;
     }
 
     return isMouseIn;
   }
 
   show() {
-    fill(255);
-    stroke(255);
+    fill(0);
+    stroke(0);
 
+    push();
+    translate(this.position.x, this.position.y);
+    this.rotate();
     this.mutateVertices();
     this.drawVertices();
+    pop();
   }
 
   update() {
     this.checkToMouseIn();
-    this.rotate();
   }
 
   rotate() {
-    rotateY(this.angle);
+    angleMode(DEGREES);
+    rotate(90);
   }
 }

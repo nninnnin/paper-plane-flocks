@@ -51,34 +51,28 @@
       let paperplanes = [];
 
       function setup() {
-        const canvas = createCanvas(594, 841, WEBGL);
+        // Set canvas size
+        const canvas = createCanvas(innerWidth, innerHeight, WEBGL);
+        window.addEventListener("resize", () => {
+          resizeCanvas(innerWidth, innerHeight);
+        });
 
         const START_X = -width / 2;
         const START_Y = -height / 2;
 
-        console.log(width, height);
-        console.log(START_X, START_Y);
+        // 한 행에 들어갈 비행기의 갯수만 정하면 나머지는 자동으로 계산된다.
+        const NUMBER_OF_COLUMNS = 10;
 
-        const MARGIN_TOP = 30;
-        const MARGIN_LEFT = 30;
+        const spacing = canvas.width / (NUMBER_OF_COLUMNS - 1);
+        const numberOfRows = Math.ceil(canvas.height / spacing);
+        const numberOfPlanes = NUMBER_OF_COLUMNS * numberOfRows;
 
-        const SPACING_X = 20;
-        const SPACING_Y = 20;
+        for (let i = 0; i < numberOfPlanes; i++) {
+          const columnIndex = i % NUMBER_OF_COLUMNS;
+          const rowIndex = Math.floor(i / NUMBER_OF_COLUMNS);
 
-        // const NUMBER_OF_PLANES = 380;
-        const NUMBER_OF_PLANES = 380;
-        const NUMBER_OF_COLUMNS = 19;
-
-        for (let i = 0; i < NUMBER_OF_PLANES; i++) {
-          const columnIndex = Math.floor(i / NUMBER_OF_COLUMNS);
-          const rowIndex = i % NUMBER_OF_COLUMNS;
-
-          const x =
-            START_X + MARGIN_LEFT + (Paperplane.width + SPACING_X) * rowIndex;
-          const y =
-            START_Y +
-            MARGIN_TOP +
-            (Paperplane.height + SPACING_Y) * columnIndex;
+          const x = START_X + spacing * columnIndex;
+          const y = START_Y + spacing * rowIndex;
 
           const paperplane = new Paperplane(x, y);
 
@@ -87,7 +81,7 @@
       }
 
       function draw() {
-        background(0);
+        background(255);
 
         paperplanes.forEach((paperplane) => {
           paperplane.update();
