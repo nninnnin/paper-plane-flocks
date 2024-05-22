@@ -63,9 +63,26 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 
       let isPressed = false;
 
+      function evaluateDrawing() {
+        // 조건 1. 아래로 돌아오는 진행방향이 존재해서는 안된다.
+        const isAnyPlaneGoingDown = _.flatten(paperplanes).some(
+          (paperplane) => paperplane.isGoingDown
+        );
+
+        if (isAnyPlaneGoingDown) {
+          return {
+            isValid: false,
+            message: "There is a plane going down",
+          };
+        }
+
+        return {
+          isValid: true,
+        };
+      }
+
       function setup() {
         // Set canvas size
-        console.log(innerWidth);
         const canvas = createCanvas(innerWidth, innerHeight, WEBGL);
         window.addEventListener("resize", () => {
           resizeCanvas(innerWidth, innerHeight);
@@ -76,15 +93,30 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 
         // 마우스 프레스 되면 값을 추가한다
         canvas.touchStarted(() => {
-          console.log("-_-");
-
           isPressed = true;
         });
 
         canvas.touchEnded(() => {
-          console.log("-0-..");
+          const result = evaluateDrawing();
+          console.log(result);
+
+          paperplanes.forEach((row) => {
+            row.forEach((paperplane) => {
+              paperplane.reset();
+            });
+          });
 
           isPressed = false;
+
+          mouseX = 0;
+          mouseY = 0;
+        });
+
+        canvas.mouseReleased(() => {
+          isPressed = false;
+
+          mouseX = 0;
+          mouseY = 0;
         });
 
         // 한 행에 들어갈 비행기의 갯수만 정하면 나머지는 자동으로 계산된다.

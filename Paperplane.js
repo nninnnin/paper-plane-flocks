@@ -18,7 +18,14 @@ class Paperplane {
 
     this.columnIndex = columnIndex;
     this.rowIndex = rowIndex;
+    this.isGoingDown = false;
     this.angleConfirmed = false;
+  }
+
+  reset() {
+    this.setType("point");
+    this.isGoingDown = false;
+    this.resetAngleConfirmed();
   }
 
   setType(type) {
@@ -153,8 +160,7 @@ class Paperplane {
       const dx = this.mouseOutPosition.x - this.mouseInPosition.x;
       const dy = this.mouseOutPosition.y - this.mouseInPosition.y;
 
-      this.angle = atan2(dy, dx);
-      console.log(this.angle);
+      this.angle = atan2(dy, dx) + 90;
 
       this.setType("paperplane");
       this.setAngleConfirmed();
@@ -164,10 +170,21 @@ class Paperplane {
   }
 
   setAngleConfirmed() {
+    console.log(this.angle);
+    const isGoingDown = this.angle < 270 && this.angle > 90;
+
+    if (isGoingDown) {
+      this.isGoingDown = true;
+    }
+
     this.angleConfirmed = true;
 
     this.setUpperNeigborPlane();
     this.setBottomNeighborPlanes();
+  }
+
+  resetAngleConfirmed() {
+    this.angleConfirmed = false;
   }
 
   setUpperNeigborPlane() {
@@ -284,8 +301,6 @@ class Paperplane {
 
     // const mappedAngle = map(this.angle, -PI, PI, -PI * 0.5, PI * 0.5);
 
-    // console.log(this.angle);
-
-    rotate(this.angle + 90);
+    rotate(this.angle);
   }
 }
