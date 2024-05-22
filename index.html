@@ -37,6 +37,13 @@
         color: white;
         font-size: 1rem;
       }
+
+      * {
+        user-select: none;
+        webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
     </style>
   </head>
   <body>
@@ -44,14 +51,21 @@
 
     <canvas></canvas>
 
+    <script src="
+https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
+"></script>
     <script src="p5.min.js"></script>
     <script src="Paperplane.js"></script>
 
     <script>
       let paperplanes = [];
+      window.planes = paperplanes;
+
+      let isPressed = false;
 
       function setup() {
         // Set canvas size
+        console.log(innerWidth);
         const canvas = createCanvas(innerWidth, innerHeight, WEBGL);
         window.addEventListener("resize", () => {
           resizeCanvas(innerWidth, innerHeight);
@@ -60,8 +74,21 @@
         const START_X = -width / 2;
         const START_Y = -height / 2;
 
+        // 마우스 프레스 되면 값을 추가한다
+        canvas.touchStarted(() => {
+          console.log("-_-");
+
+          isPressed = true;
+        });
+
+        canvas.touchEnded(() => {
+          console.log("-0-..");
+
+          isPressed = false;
+        });
+
         // 한 행에 들어갈 비행기의 갯수만 정하면 나머지는 자동으로 계산된다.
-        const NUMBER_OF_COLUMNS = 10;
+        const NUMBER_OF_COLUMNS = 15;
 
         const spacing = canvas.width / (NUMBER_OF_COLUMNS - 1);
         const numberOfRows = Math.ceil(canvas.height / spacing);
@@ -74,19 +101,27 @@
           const x = START_X + spacing * columnIndex;
           const y = START_Y + spacing * rowIndex;
 
-          const paperplane = new Paperplane(x, y);
+          const paperplane = new Paperplane(x, y, columnIndex, rowIndex);
 
-          paperplanes.push(paperplane);
+          if (!paperplanes[rowIndex]) {
+            paperplanes[rowIndex] = [];
+          }
+
+          paperplanes[rowIndex][columnIndex] = paperplane;
         }
       }
 
       function draw() {
         background(255);
 
-        paperplanes.forEach((paperplane) => {
+        _.flatten(paperplanes).forEach((paperplane) => {
           paperplane.update();
           paperplane.show();
         });
+
+        if (isPressed) {
+          window.mouseHoveredDuration += 1;
+        }
       }
     </script>
   </body>

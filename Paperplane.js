@@ -1,12 +1,13 @@
 class Paperplane {
-  static width = 10;
-  static height = 20;
+  static width = 4;
+  static height = 10;
+  static tailHeight = 3;
   static numberOfVertices = 10;
 
-  constructor(x = 0, y = 0, index = null) {
+  constructor(x = 0, y = 0, columnIndex, rowIndex) {
     this.position = createVector(x, y, 0);
 
-    this.angle = 0;
+    this.angle = -90;
     this.mouseInPosition = createVector(0, 0);
     this.mouseOutPosition = createVector(0, 0);
 
@@ -15,7 +16,9 @@ class Paperplane {
     this.setVertices();
     this.targetVertices = [];
 
-    this.index = index;
+    this.columnIndex = columnIndex;
+    this.rowIndex = rowIndex;
+    this.angleConfirmed = false;
   }
 
   setType(type) {
@@ -25,7 +28,7 @@ class Paperplane {
   createCircleVertices() {
     const vertices = [];
 
-    const CIRCLE_RADIUS = Paperplane.width * 0.3;
+    const CIRCLE_RADIUS = Paperplane.width * 0.15;
 
     for (let i = 0; i < Paperplane.numberOfVertices; i++) {
       const angle = (TWO_PI / Paperplane.numberOfVertices) * i;
@@ -45,11 +48,9 @@ class Paperplane {
     const leftPoint = createVector(-Paperplane.width, Paperplane.height / 2, 0);
     const rightPoint = createVector(Paperplane.width, Paperplane.height / 2, 0);
 
-    const INNER_TAIL_LENGTH = 10;
-
     const innerTailPoint = createVector(
       lerp(leftPoint.x, rightPoint.x, 0.5),
-      topPoint.y + Paperplane.height - INNER_TAIL_LENGTH
+      topPoint.y + Paperplane.height - Paperplane.tailHeight
     );
 
     const vertices = [];
@@ -86,18 +87,21 @@ class Paperplane {
       this.targetVertices = this.paperplaneVertices;
     }
 
-    for (let i = 0; i < Paperplane.numberOfVertices; i++) {
-      this.vertices[i].x = lerp(
-        this.vertices[i].x,
-        this.targetVertices[i].x,
-        0.1
-      );
-      this.vertices[i].y = lerp(
-        this.vertices[i].y,
-        this.targetVertices[i].y,
-        0.1
-      );
-    }
+    this.vertices = this.targetVertices;
+
+    // for (let i = 0; i < Paperplane.numberOfVertices; i++) {
+    //   this.vertices[i].x = lerp(
+    //     this.vertices[i].x,
+    //     this.targetVertices[i].x,
+    //     0.1
+    //   );
+
+    //   this.vertices[i].y = lerp(
+    //     this.vertices[i].y,
+    //     this.targetVertices[i].y,
+    //     0.1
+    //   );
+    // }
   }
 
   drawVertices() {
@@ -118,8 +122,6 @@ class Paperplane {
     const webGLMouseX = mouseX - width / 2;
     const webGLMouseY = mouseY - height / 2;
 
-    // console.log(webGLMouseX, webGLMouseY);
-
     push();
     strokeWeight(10);
     // set pointColor
@@ -135,23 +137,130 @@ class Paperplane {
       return false;
     }
 
-    const isMouseIn = distance < 80;
+    if (!window.mouseHoveredDuration) {
+      window.mouseHoveredDuration = 0;
+    }
+
+    const effectArea = Math.floor(canvas.width / devicePixelRatio / 20);
+    const isMouseIn = distance < effectArea;
 
     if (isMouseIn) {
-      this.setType("paperplane");
       this.mouseInPosition = createVector(webGLMouseX, webGLMouseY);
-    } else if (this.type === "paperplane") {
-      this.setType("point");
+      this.setType("progress");
+    } else if (this.type === "progress" && !this.angleConfirmed) {
       this.mouseOutPosition = createVector(webGLMouseX, webGLMouseY);
 
       const dx = this.mouseOutPosition.x - this.mouseInPosition.x;
       const dy = this.mouseOutPosition.y - this.mouseInPosition.y;
 
-      // this.angle = atan2(dy, dx);
-      // this.angle = 90;
+      this.angle = atan2(dy, dx);
+      console.log(this.angle);
+
+      this.setType("paperplane");
+      this.setAngleConfirmed();
     }
 
     return isMouseIn;
+  }
+
+  setAngleConfirmed() {
+    this.angleConfirmed = true;
+
+    this.setUpperNeigborPlane();
+    this.setBottomNeighborPlanes();
+  }
+
+  setUpperNeigborPlane() {
+    const { columnIndex, rowIndex } = this;
+    const planes = window.planes;
+
+    const upperRow = planes[rowIndex - 1];
+
+    if (!upperRow) return;
+
+    const hasUpperLimit = planes
+      .slice(0, rowIndex)
+      .some((row) => row.some((node) => node.angleConfirmed));
+
+    if (!hasUpperLimit) return;
+
+    const hasAlreadyConfirmedUpperNode = upperRow.some(
+      (node) => node.angleConfirmed
+    );
+
+    if (hasAlreadyConfirmedUpperNode) return;
+
+    // lerp the columnIndex between the closest confirmed and the current node
+    let closestConfirmedTopNode;
+
+    planes
+      .slice(0, rowIndex)
+      .reverse()
+      .find((row) =>
+        row.find((node) => {
+          if (node.angleConfirmed) {
+            closestConfirmedTopNode = node;
+            return true;
+          }
+        })
+      );
+
+    const lerpedColumnIndex = Math.floor(
+      lerp(closestConfirmedTopNode.columnIndex, columnIndex, 0.5)
+    );
+
+    const topNode = planes[rowIndex - 1][lerpedColumnIndex];
+
+    if (topNode && !topNode.angleConfirmed) {
+      topNode.angle = this.angle;
+      topNode.setType("paperplane");
+      topNode.setAngleConfirmed();
+    }
+  }
+
+  setBottomNeighborPlanes() {
+    const { columnIndex, rowIndex } = this;
+    const planes = window.planes;
+
+    const bottomRow = planes[rowIndex + 1];
+
+    if (!bottomRow) return;
+
+    const hasBottomLimit = planes
+      .slice(rowIndex + 1)
+      .some((row) => row.some((node) => node.angleConfirmed));
+
+    if (!hasBottomLimit) return;
+
+    const hasAlreadyConfirmedBottomNode = bottomRow.some(
+      (node) => node.angleConfirmed
+    );
+
+    if (hasAlreadyConfirmedBottomNode) return;
+
+    // lerp the columnIndex between the closest confirmed and the current node
+    let closestConfirmedBottomNode;
+
+    planes.slice(rowIndex + 1).find((row) =>
+      row.find((node) => {
+        if (node.angleConfirmed) {
+          closestConfirmedBottomNode = node;
+          return true;
+        }
+      })
+    );
+
+    const lerpedColumnIndex = Math.floor(
+      lerp(closestConfirmedBottomNode.columnIndex, columnIndex, 0.5)
+    );
+
+    const bottomNode = planes[rowIndex + 1][lerpedColumnIndex];
+
+    if (bottomNode && !bottomNode.angleConfirmed) {
+      bottomNode.angle = this.angle;
+      bottomNode.setType("paperplane");
+      bottomNode.setAngleConfirmed();
+    }
   }
 
   show() {
@@ -172,6 +281,11 @@ class Paperplane {
 
   rotate() {
     angleMode(DEGREES);
-    rotate(90);
+
+    // const mappedAngle = map(this.angle, -PI, PI, -PI * 0.5, PI * 0.5);
+
+    // console.log(this.angle);
+
+    rotate(this.angle + 90);
   }
 }
