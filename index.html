@@ -16,6 +16,10 @@
         padding: 0;
         height: 100%;
         overflow: hidden;
+
+        background-image: url("/images/through-love.webp");
+        background-size: cover;
+        background-position: center;
       }
 
       canvas {
@@ -23,8 +27,6 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-
-        background-color: black;
       }
 
       h1 {
@@ -62,6 +64,9 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
       window.planes = paperplanes;
 
       let isPressed = false;
+      let allowDrawing = true;
+      let arrangeWayout = false;
+      let animatePlanes = false;
 
       function evaluateDrawing() {
         // 조건 1. 아래로 돌아오는 진행방향이 존재해서는 안된다.
@@ -81,6 +86,14 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
         };
       }
 
+      function resetPaperplanes(paperplanes) {
+        paperplanes.forEach((row) => {
+          row.forEach((paperplane) => {
+            paperplane.reset();
+          });
+        });
+      }
+
       function setup() {
         // Set canvas size
         const canvas = createCanvas(innerWidth, innerHeight, WEBGL);
@@ -93,18 +106,29 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 
         // 마우스 프레스 되면 값을 추가한다
         canvas.touchStarted(() => {
+          if (!allowDrawing) {
+            return;
+          }
+
           isPressed = true;
         });
 
         canvas.touchEnded(() => {
           const result = evaluateDrawing();
-          console.log(result);
 
-          paperplanes.forEach((row) => {
-            row.forEach((paperplane) => {
-              paperplane.reset();
+          if (!result.isValid) {
+            resetPaperplanes(paperplanes);
+          } else {
+            // 1. prevent more drawing
+            allowDrawing = false;
+
+            // 2. animate the planes
+            _.flatten(paperplanes).forEach((paperplane) => {
+              console.log(paperplane, "너넨 디졋어");
+
+              // paperplane.animate();
             });
-          });
+          }
 
           isPressed = false;
 

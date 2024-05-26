@@ -8,6 +8,7 @@ class Paperplane {
     this.position = createVector(x, y, 0);
 
     this.angle = -90;
+    this.opacity = 1;
     this.mouseInPosition = createVector(0, 0);
     this.mouseOutPosition = createVector(0, 0);
 
@@ -112,6 +113,8 @@ class Paperplane {
   }
 
   drawVertices() {
+    blendMode(REMOVE);
+
     beginShape();
 
     for (let i = 0; i < Paperplane.numberOfVertices; i++) {
@@ -121,6 +124,8 @@ class Paperplane {
     }
 
     endShape(CLOSE);
+
+    blendMode(BLEND);
   }
 
   checkToMouseIn() {
@@ -170,7 +175,6 @@ class Paperplane {
   }
 
   setAngleConfirmed() {
-    console.log(this.angle);
     const isGoingDown = this.angle < 270 && this.angle > 90;
 
     if (isGoingDown) {
@@ -195,17 +199,17 @@ class Paperplane {
 
     if (!upperRow) return;
 
-    const hasUpperLimit = planes
-      .slice(0, rowIndex)
-      .some((row) => row.some((node) => node.angleConfirmed));
-
-    if (!hasUpperLimit) return;
-
     const hasAlreadyConfirmedUpperNode = upperRow.some(
       (node) => node.angleConfirmed
     );
 
     if (hasAlreadyConfirmedUpperNode) return;
+
+    const hasUpperLimit = planes
+      .slice(0, rowIndex)
+      .some((row) => row.some((node) => node.angleConfirmed));
+
+    if (!hasUpperLimit) return;
 
     // lerp the columnIndex between the closest confirmed and the current node
     let closestConfirmedTopNode;
@@ -243,17 +247,17 @@ class Paperplane {
 
     if (!bottomRow) return;
 
-    const hasBottomLimit = planes
-      .slice(rowIndex + 1)
-      .some((row) => row.some((node) => node.angleConfirmed));
-
-    if (!hasBottomLimit) return;
-
     const hasAlreadyConfirmedBottomNode = bottomRow.some(
       (node) => node.angleConfirmed
     );
 
     if (hasAlreadyConfirmedBottomNode) return;
+
+    const hasBottomLimit = planes
+      .slice(rowIndex + 1)
+      .some((row) => row.some((node) => node.angleConfirmed));
+
+    if (!hasBottomLimit) return;
 
     // lerp the columnIndex between the closest confirmed and the current node
     let closestConfirmedBottomNode;
@@ -285,6 +289,7 @@ class Paperplane {
     stroke(0);
 
     push();
+
     translate(this.position.x, this.position.y);
     this.rotate();
     this.mutateVertices();
@@ -303,4 +308,6 @@ class Paperplane {
 
     rotate(this.angle);
   }
+
+  animate() {}
 }
