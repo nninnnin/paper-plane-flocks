@@ -4,7 +4,12 @@ class Paperplane {
   static tailHeight = 3;
   static numberOfVertices = 10;
 
-  constructor(x = 0, y = 0, columnIndex, rowIndex) {
+  constructor(
+    x = 0,
+    y = 0,
+    columnIndex,
+    rowIndex
+  ) {
     this.position = createVector(x, y, 0);
 
     this.angle = -90;
@@ -19,8 +24,11 @@ class Paperplane {
 
     this.columnIndex = columnIndex;
     this.rowIndex = rowIndex;
+
     this.isGoingDown = false;
     this.angleConfirmed = false;
+
+    this.targetAngle = 0;
   }
 
   reset() {
@@ -38,8 +46,14 @@ class Paperplane {
 
     const CIRCLE_RADIUS = Paperplane.width * 0.15;
 
-    for (let i = 0; i < Paperplane.numberOfVertices; i++) {
-      const angle = (TWO_PI / Paperplane.numberOfVertices) * i;
+    for (
+      let i = 0;
+      i < Paperplane.numberOfVertices;
+      i++
+    ) {
+      const angle =
+        (TWO_PI / Paperplane.numberOfVertices) *
+        i;
       const x = cos(angle) * CIRCLE_RADIUS;
       const y = sin(angle) * CIRCLE_RADIUS;
 
@@ -52,13 +66,27 @@ class Paperplane {
   }
 
   createPaperplaneVertices() {
-    const topPoint = createVector(0, -Paperplane.height / 2, 0);
-    const leftPoint = createVector(-Paperplane.width, Paperplane.height / 2, 0);
-    const rightPoint = createVector(Paperplane.width, Paperplane.height / 2, 0);
+    const topPoint = createVector(
+      0,
+      -Paperplane.height / 2,
+      0
+    );
+    const leftPoint = createVector(
+      -Paperplane.width,
+      Paperplane.height / 2,
+      0
+    );
+    const rightPoint = createVector(
+      Paperplane.width,
+      Paperplane.height / 2,
+      0
+    );
 
     const innerTailPoint = createVector(
       lerp(leftPoint.x, rightPoint.x, 0.5),
-      topPoint.y + Paperplane.height - Paperplane.tailHeight
+      topPoint.y +
+        Paperplane.height -
+        Paperplane.tailHeight
     );
 
     const vertices = [];
@@ -67,12 +95,36 @@ class Paperplane {
       topPoint,
       rightPoint,
       innerTailPoint,
-      p5.Vector.lerp(innerTailPoint, leftPoint, 0.1),
-      p5.Vector.lerp(innerTailPoint, leftPoint, 0.2),
-      p5.Vector.lerp(innerTailPoint, leftPoint, 0.3),
-      p5.Vector.lerp(innerTailPoint, leftPoint, 0.5),
-      p5.Vector.lerp(innerTailPoint, leftPoint, 0.6),
-      p5.Vector.lerp(innerTailPoint, leftPoint, 0.7),
+      p5.Vector.lerp(
+        innerTailPoint,
+        leftPoint,
+        0.1
+      ),
+      p5.Vector.lerp(
+        innerTailPoint,
+        leftPoint,
+        0.2
+      ),
+      p5.Vector.lerp(
+        innerTailPoint,
+        leftPoint,
+        0.3
+      ),
+      p5.Vector.lerp(
+        innerTailPoint,
+        leftPoint,
+        0.5
+      ),
+      p5.Vector.lerp(
+        innerTailPoint,
+        leftPoint,
+        0.6
+      ),
+      p5.Vector.lerp(
+        innerTailPoint,
+        leftPoint,
+        0.7
+      ),
       leftPoint
     );
 
@@ -84,15 +136,18 @@ class Paperplane {
 
     this.vertices = vertices;
 
-    this.circleVertices = this.createCircleVertices();
-    this.paperplaneVertices = this.createPaperplaneVertices();
+    this.circleVertices =
+      this.createCircleVertices();
+    this.paperplaneVertices =
+      this.createPaperplaneVertices();
   }
 
   mutateVertices() {
     if (this.type === "point") {
       this.targetVertices = this.circleVertices;
     } else if (this.type === "paperplane") {
-      this.targetVertices = this.paperplaneVertices;
+      this.targetVertices =
+        this.paperplaneVertices;
     }
 
     this.vertices = this.targetVertices;
@@ -117,7 +172,11 @@ class Paperplane {
 
     beginShape();
 
-    for (let i = 0; i < Paperplane.numberOfVertices; i++) {
+    for (
+      let i = 0;
+      i < Paperplane.numberOfVertices;
+      i++
+    ) {
       const { x, y } = this.vertices[i];
 
       vertex(x, y);
@@ -141,9 +200,15 @@ class Paperplane {
     point(webGLMouseX, webGLMouseY);
     pop();
 
-    const distance = dist(x, y, webGLMouseX, webGLMouseY);
+    const distance = dist(
+      x,
+      y,
+      webGLMouseX,
+      webGLMouseY
+    );
 
-    const isMouseInCanvas = mouseX > 0 && mouseY > 0;
+    const isMouseInCanvas =
+      mouseX > 0 && mouseY > 0;
 
     if (!isMouseInCanvas) {
       return false;
@@ -153,17 +218,32 @@ class Paperplane {
       window.mouseHoveredDuration = 0;
     }
 
-    const effectArea = Math.floor(canvas.width / devicePixelRatio / 20);
+    const effectArea = Math.floor(
+      canvas.width / devicePixelRatio / 20
+    );
     const isMouseIn = distance < effectArea;
 
     if (isMouseIn) {
-      this.mouseInPosition = createVector(webGLMouseX, webGLMouseY);
+      this.mouseInPosition = createVector(
+        webGLMouseX,
+        webGLMouseY
+      );
       this.setType("progress");
-    } else if (this.type === "progress" && !this.angleConfirmed) {
-      this.mouseOutPosition = createVector(webGLMouseX, webGLMouseY);
+    } else if (
+      this.type === "progress" &&
+      !this.angleConfirmed
+    ) {
+      this.mouseOutPosition = createVector(
+        webGLMouseX,
+        webGLMouseY
+      );
 
-      const dx = this.mouseOutPosition.x - this.mouseInPosition.x;
-      const dy = this.mouseOutPosition.y - this.mouseInPosition.y;
+      const dx =
+        this.mouseOutPosition.x -
+        this.mouseInPosition.x;
+      const dy =
+        this.mouseOutPosition.y -
+        this.mouseInPosition.y;
 
       this.angle = atan2(dy, dx) + 90;
 
@@ -174,8 +254,17 @@ class Paperplane {
     return isMouseIn;
   }
 
+  setAngle(angle) {
+    this.angle = angle;
+  }
+
+  setTagetAngle(angle) {
+    this.targetAngle = angle;
+  }
+
   setAngleConfirmed() {
-    const isGoingDown = this.angle < 270 && this.angle > 90;
+    const isGoingDown =
+      this.angle < 270 && this.angle > 90;
 
     if (isGoingDown) {
       this.isGoingDown = true;
@@ -199,15 +288,18 @@ class Paperplane {
 
     if (!upperRow) return;
 
-    const hasAlreadyConfirmedUpperNode = upperRow.some(
-      (node) => node.angleConfirmed
-    );
+    const hasAlreadyConfirmedUpperNode =
+      upperRow.some(
+        (node) => node.angleConfirmed
+      );
 
     if (hasAlreadyConfirmedUpperNode) return;
 
     const hasUpperLimit = planes
       .slice(0, rowIndex)
-      .some((row) => row.some((node) => node.angleConfirmed));
+      .some((row) =>
+        row.some((node) => node.angleConfirmed)
+      );
 
     if (!hasUpperLimit) return;
 
@@ -227,10 +319,15 @@ class Paperplane {
       );
 
     const lerpedColumnIndex = Math.floor(
-      lerp(closestConfirmedTopNode.columnIndex, columnIndex, 0.5)
+      lerp(
+        closestConfirmedTopNode.columnIndex,
+        columnIndex,
+        0.5
+      )
     );
 
-    const topNode = planes[rowIndex - 1][lerpedColumnIndex];
+    const topNode =
+      planes[rowIndex - 1][lerpedColumnIndex];
 
     if (topNode && !topNode.angleConfirmed) {
       topNode.angle = this.angle;
@@ -247,15 +344,18 @@ class Paperplane {
 
     if (!bottomRow) return;
 
-    const hasAlreadyConfirmedBottomNode = bottomRow.some(
-      (node) => node.angleConfirmed
-    );
+    const hasAlreadyConfirmedBottomNode =
+      bottomRow.some(
+        (node) => node.angleConfirmed
+      );
 
     if (hasAlreadyConfirmedBottomNode) return;
 
     const hasBottomLimit = planes
       .slice(rowIndex + 1)
-      .some((row) => row.some((node) => node.angleConfirmed));
+      .some((row) =>
+        row.some((node) => node.angleConfirmed)
+      );
 
     if (!hasBottomLimit) return;
 
@@ -272,12 +372,20 @@ class Paperplane {
     );
 
     const lerpedColumnIndex = Math.floor(
-      lerp(closestConfirmedBottomNode.columnIndex, columnIndex, 0.5)
+      lerp(
+        closestConfirmedBottomNode.columnIndex,
+        columnIndex,
+        0.5
+      )
     );
 
-    const bottomNode = planes[rowIndex + 1][lerpedColumnIndex];
+    const bottomNode =
+      planes[rowIndex + 1][lerpedColumnIndex];
 
-    if (bottomNode && !bottomNode.angleConfirmed) {
+    if (
+      bottomNode &&
+      !bottomNode.angleConfirmed
+    ) {
       bottomNode.angle = this.angle;
       bottomNode.setType("paperplane");
       bottomNode.setAngleConfirmed();
@@ -307,6 +415,201 @@ class Paperplane {
     // const mappedAngle = map(this.angle, -PI, PI, -PI * 0.5, PI * 0.5);
 
     rotate(this.angle);
+  }
+
+  isToppestPlane() {
+    const isPlane = this.type === "paperplane";
+
+    if (!isPlane) return;
+
+    const topperRows = window.planes.slice(
+      0,
+      this.rowIndex
+    );
+
+    function checkRowHasPlane(row) {
+      return row.some(
+        (el) => el.type === "paperplane"
+      );
+    }
+
+    function hasTopperRowsHasPlane(rows) {
+      for (let i = 0; i < rows.length; i++) {
+        const hasRowContainsPlane =
+          checkRowHasPlane(rows[i]);
+
+        if (hasRowContainsPlane) return true;
+      }
+
+      return false;
+    }
+
+    return !hasTopperRowsHasPlane(topperRows);
+  }
+
+  static adjustColIndex(colIndex) {
+    let adjustedIndex = colIndex;
+
+    if (colIndex < 0) {
+      adjustedIndex = 0;
+    }
+
+    if (colIndex >= window.NUMBER_OF_COLUMNS) {
+      adjustedIndex =
+        window.NUMBER_OF_COLUMNS - 1;
+    }
+
+    return adjustedIndex;
+  }
+
+  changeTopperNodeToPlane(colIndex, angle) {
+    const topperRowIndex = this.rowIndex - 1;
+    const hasTopperRow =
+      window.planes[topperRowIndex]?.length > 0;
+    if (!hasTopperRow) return;
+
+    let adjustedColIndex =
+      Paperplane.adjustColIndex(colIndex);
+
+    window.planes[topperRowIndex][
+      adjustedColIndex
+    ].setType("paperplane");
+    window.planes[topperRowIndex][
+      adjustedColIndex
+    ].setAngle(angle);
+  }
+
+  randomizeWayOut() {
+    const 왼쪽코너에치우친경우 =
+      this.columnIndex < 4;
+
+    const 오른쪽코너에치우친경우 =
+      window.NUMBER_OF_COLUMNS -
+        this.columnIndex <
+      3;
+
+    const restWayoutRows = window.planes.slice(
+      0,
+      this.rowIndex
+    );
+
+    if (왼쪽코너에치우친경우) {
+      restWayoutRows.forEach((row) => {
+        row.forEach((node) =>
+          node.setTagetAngle(10)
+        );
+      });
+
+      return;
+    }
+
+    if (오른쪽코너에치우친경우) {
+      restWayoutRows.forEach((row) => {
+        row.forEach((node) =>
+          node.setTagetAngle(-10)
+        );
+      });
+
+      return;
+    }
+
+    const 너무변화가없는경우 =
+      this.angle <= 10 && this.targetAngle === 0;
+
+    if (너무변화가없는경우) {
+      if (this.angle > 0) {
+        restWayoutRows.forEach((row) => {
+          row.forEach((node) =>
+            node.setTagetAngle(-10)
+          );
+        });
+      } else {
+        restWayoutRows.forEach((row) => {
+          row.forEach((node) =>
+            node.setTagetAngle(10)
+          );
+        });
+      }
+
+      return;
+    }
+  }
+
+  arrangeWayOut() {
+    const hasTopperRow =
+      window.planes[this.rowIndex - 1]?.length >
+      0;
+    if (!hasTopperRow) return;
+
+    const topperRowIndex = this.rowIndex - 1;
+    let topperPlaneColIndex;
+
+    const angleLerpRatio = 0.4;
+
+    // 왼쪽으로
+    if (this.angle <= -5) {
+      const leftColIndex = this.columnIndex - 1;
+      topperPlaneColIndex = leftColIndex;
+
+      this.randomizeWayOut();
+      const lerpedAngle = lerp(
+        this.angle,
+        this.targetAngle,
+        angleLerpRatio
+      );
+
+      this.changeTopperNodeToPlane(
+        leftColIndex,
+        lerpedAngle
+      );
+    }
+
+    // 가운데로
+    if (this.angle > -5 && this.angle < 5) {
+      const colIndex = this.columnIndex;
+      topperPlaneColIndex = colIndex;
+
+      this.randomizeWayOut();
+      const lerpedAngle = lerp(
+        this.angle,
+        this.targetAngle,
+        angleLerpRatio
+      );
+
+      this.changeTopperNodeToPlane(
+        colIndex,
+        lerpedAngle
+      );
+    }
+
+    // 오른쪽으로
+    if (this.angle >= 5) {
+      const rightColIndex = this.columnIndex + 1;
+      topperPlaneColIndex = rightColIndex;
+
+      this.randomizeWayOut();
+      const lerpedAngle = lerp(
+        this.angle,
+        this.targetAngle,
+        angleLerpRatio
+      );
+
+      this.changeTopperNodeToPlane(
+        rightColIndex,
+        lerpedAngle
+      );
+    }
+
+    const adjustedColIndex =
+      Paperplane.adjustColIndex(
+        topperPlaneColIndex
+      );
+    const topperPlane =
+      window.planes[topperRowIndex][
+        adjustedColIndex
+      ];
+
+    topperPlane.arrangeWayOut();
   }
 
   animate() {}

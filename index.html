@@ -122,10 +122,11 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
             // 1. prevent more drawing
             allowDrawing = false;
 
-            // 2. animate the planes
-            _.flatten(paperplanes).forEach((paperplane) => {
-              console.log(paperplane, "너넨 디졋어");
+            // 2. arrange the way out of planes
+            arrangeWayout = true;
 
+            // 3. animate the planes
+            _.flatten(paperplanes).forEach((paperplane) => {
               // paperplane.animate();
             });
           }
@@ -145,6 +146,7 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 
         // 한 행에 들어갈 비행기의 갯수만 정하면 나머지는 자동으로 계산된다.
         const NUMBER_OF_COLUMNS = 15;
+        window.NUMBER_OF_COLUMNS = NUMBER_OF_COLUMNS;
 
         const spacing = canvas.width / (NUMBER_OF_COLUMNS - 1);
         const numberOfRows = Math.ceil(canvas.height / spacing);
@@ -177,6 +179,18 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 
         if (isPressed) {
           window.mouseHoveredDuration += 1;
+        }
+
+        if (arrangeWayout) {
+          const toppestPlane = _.flatten(paperplanes).find(
+            (el) => el.type === "paperplane"
+          );
+
+          console.log(toppestPlane);
+
+          toppestPlane.arrangeWayOut();
+
+          arrangeWayout = false;
         }
       }
     </script>
