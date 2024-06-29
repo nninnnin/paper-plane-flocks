@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>Planes Flock</title>
 
     <style>
@@ -16,10 +19,12 @@
         padding: 0;
         height: 100%;
         overflow: hidden;
+      }
 
+      body {
         background-image: url("/images/through-love.webp");
         background-size: cover;
-        background-position: center;
+        background-position: right;
       }
 
       canvas {
@@ -46,16 +51,39 @@
         -moz-user-select: none;
         -ms-user-select: none;
       }
+
+      #guide {
+        display: none;
+
+        width: 100vw;
+        height: 100vh;
+
+        justify-content: center;
+        align-items: center;
+
+        line-height: 1.5em;
+      }
     </style>
   </head>
   <body>
     <!-- <h1>PAPER PLANES FLOCK (PPF)</h1> -->
 
-    <canvas></canvas>
+    <div id="guide">
+      This media does not support desktop
+      viewports.
+
+      <br />
+
+      이 미디어는 데스크탑 화면 크기를 지원하지
+      않습니다.
+    </div>
 
     <script src="
 https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 "></script>
+
+    <script src="utils.js"></script>
+
     <script src="p5.min.js"></script>
     <script src="Paperplane.js"></script>
 
@@ -70,14 +98,17 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 
       function evaluateDrawing() {
         // 조건 1. 아래로 돌아오는 진행방향이 존재해서는 안된다.
-        const isAnyPlaneGoingDown = _.flatten(paperplanes).some(
+        const isAnyPlaneGoingDown = _.flatten(
+          paperplanes
+        ).some(
           (paperplane) => paperplane.isGoingDown
         );
 
         if (isAnyPlaneGoingDown) {
           return {
             isValid: false,
-            message: "There is a plane going down",
+            message:
+              "There is a plane going down",
           };
         }
 
@@ -86,27 +117,103 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
         };
       }
 
-      function resetPaperplanes(paperplanes) {
-        paperplanes.forEach((row) => {
-          row.forEach((paperplane) => {
-            paperplane.reset();
-          });
-        });
+      function resetPaperplanes() {
+        _.flatten(this.planes).forEach((plane) =>
+          plane.reset()
+        );
       }
 
+      let isMobileDevice;
+
       function setup() {
+        isMobileDevice = isMobile();
+
+        if (!isMobileDevice) {
+          document.body.style.backgroundImage =
+            "none";
+
+          document.body.querySelector(
+            "#guide"
+          ).style.display = "flex";
+
+          return;
+        }
+
         // Set canvas size
-        const canvas = createCanvas(innerWidth, innerHeight, WEBGL);
+        const canvas = createCanvas(
+          innerWidth,
+          innerHeight,
+          WEBGL
+        );
+
+        window.NUMBER_OF_COLUMNS = 15;
+
         window.addEventListener("resize", () => {
           resizeCanvas(innerWidth, innerHeight);
+          isMobileDevice = isMobile();
+
+          setPaperplanes(
+            canvas.width /
+              (NUMBER_OF_COLUMNS - 1),
+            NUMBER_OF_COLUMNS
+          );
         });
 
-        const START_X = -width / 2;
-        const START_Y = -height / 2;
+        setPaperplanes(
+          canvas.width / (NUMBER_OF_COLUMNS - 1),
+          NUMBER_OF_COLUMNS
+        );
+
+        function setPaperplanes(
+          spacing,
+          numberOfColumns
+        ) {
+          const numberOfRows = Math.ceil(
+            canvas.height / spacing
+          );
+
+          const numberOfPlanes =
+            numberOfColumns * numberOfRows;
+
+          for (
+            let i = 0;
+            i < numberOfPlanes;
+            i++
+          ) {
+            const columnIndex =
+              i % numberOfColumns;
+            const rowIndex = Math.floor(
+              i / numberOfColumns
+            );
+
+            const START_X = -width / 2;
+            const START_Y = -height / 2;
+
+            const x =
+              START_X + spacing * columnIndex;
+            const y =
+              START_Y + spacing * rowIndex;
+
+            const paperplane = new Paperplane(
+              x,
+              y,
+              columnIndex,
+              rowIndex
+            );
+
+            if (!paperplanes[rowIndex]) {
+              paperplanes[rowIndex] = [];
+            }
+
+            paperplanes[rowIndex][columnIndex] =
+              paperplane;
+          }
+        }
 
         // 마우스 프레스 되면 값을 추가한다
-        canvas.touchStarted(() => {
+        canvas.touchStarted((e) => {
           if (!allowDrawing) {
+            e.preventDefault();
             return;
           }
 
@@ -117,7 +224,7 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
           const result = evaluateDrawing();
 
           if (!result.isValid) {
-            resetPaperplanes(paperplanes);
+            resetPaperplanes();
           } else {
             // 1. prevent more drawing
             allowDrawing = false;
@@ -126,9 +233,11 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
             arrangeWayout = true;
 
             // 3. animate the planes
-            _.flatten(paperplanes).forEach((paperplane) => {
-              // paperplane.animate();
-            });
+            _.flatten(paperplanes).forEach(
+              (paperplane) => {
+                // paperplane.animate();
+              }
+            );
           }
 
           isPressed = false;
@@ -137,56 +246,50 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
           mouseY = 0;
         });
 
-        canvas.mouseReleased(() => {
+        canvas.mouseReleased((e) => {
+          if (!allowDrawing) {
+            e.preventDefault();
+            return;
+          }
+
           isPressed = false;
 
           mouseX = 0;
           mouseY = 0;
         });
-
-        // 한 행에 들어갈 비행기의 갯수만 정하면 나머지는 자동으로 계산된다.
-        const NUMBER_OF_COLUMNS = 15;
-        window.NUMBER_OF_COLUMNS = NUMBER_OF_COLUMNS;
-
-        const spacing = canvas.width / (NUMBER_OF_COLUMNS - 1);
-        const numberOfRows = Math.ceil(canvas.height / spacing);
-        const numberOfPlanes = NUMBER_OF_COLUMNS * numberOfRows;
-
-        for (let i = 0; i < numberOfPlanes; i++) {
-          const columnIndex = i % NUMBER_OF_COLUMNS;
-          const rowIndex = Math.floor(i / NUMBER_OF_COLUMNS);
-
-          const x = START_X + spacing * columnIndex;
-          const y = START_Y + spacing * rowIndex;
-
-          const paperplane = new Paperplane(x, y, columnIndex, rowIndex);
-
-          if (!paperplanes[rowIndex]) {
-            paperplanes[rowIndex] = [];
-          }
-
-          paperplanes[rowIndex][columnIndex] = paperplane;
-        }
       }
 
       function draw() {
+        if (!isMobileDevice) {
+          clear();
+
+          return;
+        }
+
         background(255);
 
-        _.flatten(paperplanes).forEach((paperplane) => {
-          paperplane.update();
-          paperplane.show();
-        });
+        _.flatten(paperplanes).forEach(
+          (paperplane) => {
+            if (allowDrawing) {
+              paperplane.update();
+            }
+
+            paperplane.show();
+          }
+        );
 
         if (isPressed) {
           window.mouseHoveredDuration += 1;
         }
 
         if (arrangeWayout) {
-          const toppestPlane = _.flatten(paperplanes).find(
+          const toppestPlane = _.flatten(
+            paperplanes
+          ).find(
             (el) => el.type === "paperplane"
           );
 
-          console.log(toppestPlane);
+          if (!toppestPlane) return;
 
           toppestPlane.arrangeWayOut();
 

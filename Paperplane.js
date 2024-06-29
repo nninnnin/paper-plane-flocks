@@ -3,6 +3,7 @@ class Paperplane {
   static height = 10;
   static tailHeight = 3;
   static numberOfVertices = 10;
+  static directionGuideAngle = 10;
 
   constructor(
     x = 0,
@@ -29,12 +30,15 @@ class Paperplane {
     this.angleConfirmed = false;
 
     this.targetAngle = 0;
+    this.angleLerpRatio = 0.2;
   }
 
   reset() {
     this.setType("point");
     this.isGoingDown = false;
-    this.resetAngleConfirmed();
+    this.angleConfirmed = false;
+    this.angle = -90;
+    this.targetAngle = 0;
   }
 
   setType(type) {
@@ -54,6 +58,7 @@ class Paperplane {
       const angle =
         (TWO_PI / Paperplane.numberOfVertices) *
         i;
+
       const x = cos(angle) * CIRCLE_RADIUS;
       const y = sin(angle) * CIRCLE_RADIUS;
 
@@ -150,21 +155,27 @@ class Paperplane {
         this.paperplaneVertices;
     }
 
-    this.vertices = this.targetVertices;
+    if (window.animateMutation) {
+      for (
+        let i = 0;
+        i < Paperplane.numberOfVertices;
+        i++
+      ) {
+        this.vertices[i].x = lerp(
+          this.vertices[i].x,
+          this.targetVertices[i].x,
+          0.1
+        );
 
-    // for (let i = 0; i < Paperplane.numberOfVertices; i++) {
-    //   this.vertices[i].x = lerp(
-    //     this.vertices[i].x,
-    //     this.targetVertices[i].x,
-    //     0.1
-    //   );
-
-    //   this.vertices[i].y = lerp(
-    //     this.vertices[i].y,
-    //     this.targetVertices[i].y,
-    //     0.1
-    //   );
-    // }
+        this.vertices[i].y = lerp(
+          this.vertices[i].y,
+          this.targetVertices[i].y,
+          0.1
+        );
+      }
+    } else {
+      this.vertices = this.targetVertices;
+    }
   }
 
   drawVertices() {
@@ -258,7 +269,7 @@ class Paperplane {
     this.angle = angle;
   }
 
-  setTagetAngle(angle) {
+  setTargetAngle(angle) {
     this.targetAngle = angle;
   }
 
@@ -399,9 +410,11 @@ class Paperplane {
     push();
 
     translate(this.position.x, this.position.y);
+
     this.rotate();
     this.mutateVertices();
     this.drawVertices();
+
     pop();
   }
 
@@ -479,7 +492,28 @@ class Paperplane {
     ].setAngle(angle);
   }
 
-  randomizeWayOut() {
+  getNextAngle() {
+    return lerp(
+      this.angle,
+      this.targetAngle,
+      this.angleLerpRatio
+    );
+  }
+
+  arrangeTargetAngle() {
+    console.log(
+      `현재 row index: ${this.rowIndex} / col index: ${this.columnIndex}`
+    );
+
+    console.log("현재 angle", this.angle);
+    console.log(
+      "다음 angle",
+      this.getNextAngle()
+    );
+    console.log("다음 col index");
+
+    // 이 상태로 간다면~
+
     const 왼쪽코너에치우친경우 =
       this.columnIndex < 4;
 
@@ -496,7 +530,7 @@ class Paperplane {
     if (왼쪽코너에치우친경우) {
       restWayoutRows.forEach((row) => {
         row.forEach((node) =>
-          node.setTagetAngle(10)
+          node.setTargetAngle(40)
         );
       });
 
@@ -506,7 +540,7 @@ class Paperplane {
     if (오른쪽코너에치우친경우) {
       restWayoutRows.forEach((row) => {
         row.forEach((node) =>
-          node.setTagetAngle(-10)
+          node.setTargetAngle(-40)
         );
       });
 
@@ -520,13 +554,13 @@ class Paperplane {
       if (this.angle > 0) {
         restWayoutRows.forEach((row) => {
           row.forEach((node) =>
-            node.setTagetAngle(-10)
+            node.setTargetAngle(-40)
           );
         });
       } else {
         restWayoutRows.forEach((row) => {
           row.forEach((node) =>
-            node.setTagetAngle(10)
+            node.setTargetAngle(40)
           );
         });
       }
@@ -535,27 +569,37 @@ class Paperplane {
     }
   }
 
-  arrangeWayOut() {
+  arrangeWayOut(endCallback) {
     const hasTopperRow =
       window.planes[this.rowIndex - 1]?.length >
       0;
-    if (!hasTopperRow) return;
+
+    if (!hasTopperRow) {
+      window.animateMutation = false;
+
+      return;
+    } else {
+      window.animateMutation = true;
+    }
 
     const topperRowIndex = this.rowIndex - 1;
     let topperPlaneColIndex;
 
-    const angleLerpRatio = 0.4;
-
     // 왼쪽으로
-    if (this.angle <= -5) {
+    if (
+      this.angle <=
+      -Paperplane.directionGuideAngle
+    ) {
       const leftColIndex = this.columnIndex - 1;
       topperPlaneColIndex = leftColIndex;
 
-      this.randomizeWayOut();
+      console.log(this.targetAngle);
+
+      this.arrangeTargetAngle();
       const lerpedAngle = lerp(
         this.angle,
         this.targetAngle,
-        angleLerpRatio
+        this.angleLerpRatio
       );
 
       this.changeTopperNodeToPlane(
@@ -565,15 +609,19 @@ class Paperplane {
     }
 
     // 가운데로
-    if (this.angle > -5 && this.angle < 5) {
+    if (
+      this.angle >
+        -Paperplane.directionGuideAngle &&
+      this.angle < Paperplane.directionGuideAngle
+    ) {
       const colIndex = this.columnIndex;
       topperPlaneColIndex = colIndex;
 
-      this.randomizeWayOut();
+      this.arrangeTargetAngle();
       const lerpedAngle = lerp(
         this.angle,
         this.targetAngle,
-        angleLerpRatio
+        this.angleLerpRatio
       );
 
       this.changeTopperNodeToPlane(
@@ -583,15 +631,17 @@ class Paperplane {
     }
 
     // 오른쪽으로
-    if (this.angle >= 5) {
+    if (
+      this.angle >= Paperplane.directionGuideAngle
+    ) {
       const rightColIndex = this.columnIndex + 1;
       topperPlaneColIndex = rightColIndex;
 
-      this.randomizeWayOut();
+      this.arrangeTargetAngle();
       const lerpedAngle = lerp(
         this.angle,
         this.targetAngle,
-        angleLerpRatio
+        this.angleLerpRatio
       );
 
       this.changeTopperNodeToPlane(
@@ -609,7 +659,9 @@ class Paperplane {
         adjustedColIndex
       ];
 
-    topperPlane.arrangeWayOut();
+    setTimeout(() => {
+      topperPlane.arrangeWayOut(endCallback);
+    }, 300);
   }
 
   animate() {}
