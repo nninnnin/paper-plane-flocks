@@ -510,6 +510,7 @@ class Paperplane {
       "다음 angle",
       this.getNextAngle()
     );
+
     console.log("다음 col index");
 
     // 이 상태로 간다면~

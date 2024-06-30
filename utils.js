@@ -11,3 +11,27 @@ function isMobile() {
 
   return isMobileAgent;
 }
+
+function evaluateDrawing() {
+  // 조건 1. 아래로 돌아오는 진행방향이 존재해서는 안된다.
+  const isAnyPlaneGoingDown = _.flatten(
+    paperplanes
+  ).some((paperplane) => paperplane.isGoingDown);
+
+  if (isAnyPlaneGoingDown) {
+    return {
+      isValid: false,
+      message: "There is a plane going down",
+    };
+  }
+
+  return {
+    isValid: true,
+  };
+}
+
+function resetPaperplanes() {
+  _.flatten(this.planes).forEach((plane) =>
+    plane.reset()
+  );
+}

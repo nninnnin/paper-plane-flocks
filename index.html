@@ -21,27 +21,6 @@
         overflow: hidden;
       }
 
-      @keyframes movingBG {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-
-      body {
-        background-size: cover;
-        background-position: right;
-
-        /* background-image: url("/images/through-love.webp"); */
-
-        animation: movingBG 10s linear infinite;
-      }
-
       canvas {
         position: fixed;
         top: 50%;
@@ -67,31 +46,33 @@
         -ms-user-select: none;
       }
 
-      #guide {
-        display: none;
-
+      #background {
         width: 100vw;
         height: 100vh;
 
-        justify-content: center;
-        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
 
-        line-height: 1.5em;
+        background-size: 30%;
+        background-position: right;
+        background-repeat: repeat;
       }
     </style>
+
+    <!-- components -->
+    <script src="/components/Guide.js"></script>
+
+    <!-- internal libs -->
+    <script src="/libs/EventBus.js"></script>
   </head>
   <body>
     <!-- <h1>PAPER PLANES FLOCK (PPF)</h1> -->
 
-    <div id="guide">
-      This media does not support desktop
-      viewports.
+    <div id="background"></div>
 
-      <br />
-
-      이 미디어는 데스크탑 화면 크기를 지원하지
-      않습니다.
-    </div>
+    <guide-component></guide-component>
 
     <script src="
 https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
@@ -101,222 +82,6 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
 
     <script src="p5.min.js"></script>
     <script src="Paperplane.js"></script>
-
-    <script>
-      let paperplanes = [];
-      window.planes = paperplanes;
-
-      let isPressed = false;
-      let allowDrawing = true;
-      let arrangeWayout = false;
-      let animatePlanes = false;
-
-      function evaluateDrawing() {
-        // 조건 1. 아래로 돌아오는 진행방향이 존재해서는 안된다.
-        const isAnyPlaneGoingDown = _.flatten(
-          paperplanes
-        ).some(
-          (paperplane) => paperplane.isGoingDown
-        );
-
-        if (isAnyPlaneGoingDown) {
-          return {
-            isValid: false,
-            message:
-              "There is a plane going down",
-          };
-        }
-
-        return {
-          isValid: true,
-        };
-      }
-
-      function resetPaperplanes() {
-        _.flatten(this.planes).forEach((plane) =>
-          plane.reset()
-        );
-      }
-
-      let isMobileDevice;
-
-      function setup() {
-        isMobileDevice = isMobile();
-
-        if (!isMobileDevice) {
-          document.body.style.backgroundImage =
-            "none";
-
-          document.body.querySelector(
-            "#guide"
-          ).style.display = "flex";
-
-          return;
-        }
-
-        // Set canvas size
-        const canvas = createCanvas(
-          innerWidth,
-          innerHeight,
-          WEBGL
-        );
-
-        window.NUMBER_OF_COLUMNS = 15;
-
-        window.addEventListener("resize", () => {
-          resizeCanvas(innerWidth, innerHeight);
-          isMobileDevice = isMobile();
-
-          setPaperplanes(
-            canvas.width /
-              (NUMBER_OF_COLUMNS - 1),
-            NUMBER_OF_COLUMNS
-          );
-        });
-
-        setPaperplanes(
-          canvas.width / (NUMBER_OF_COLUMNS - 1),
-          NUMBER_OF_COLUMNS
-        );
-
-        function setPaperplanes(
-          spacing,
-          numberOfColumns
-        ) {
-          const numberOfRows = Math.ceil(
-            canvas.height / spacing
-          );
-
-          const numberOfPlanes =
-            numberOfColumns * numberOfRows;
-
-          for (
-            let i = 0;
-            i < numberOfPlanes;
-            i++
-          ) {
-            const columnIndex =
-              i % numberOfColumns;
-            const rowIndex = Math.floor(
-              i / numberOfColumns
-            );
-
-            const START_X = -width / 2;
-            const START_Y = -height / 2;
-
-            const x =
-              START_X + spacing * columnIndex;
-            const y =
-              START_Y + spacing * rowIndex;
-
-            const paperplane = new Paperplane(
-              x,
-              y,
-              columnIndex,
-              rowIndex
-            );
-
-            if (!paperplanes[rowIndex]) {
-              paperplanes[rowIndex] = [];
-            }
-
-            paperplanes[rowIndex][columnIndex] =
-              paperplane;
-          }
-        }
-
-        // 마우스 프레스 되면 값을 추가한다
-        canvas.touchStarted((e) => {
-          if (!allowDrawing) {
-            e.preventDefault();
-            return;
-          }
-
-          isPressed = true;
-        });
-
-        canvas.touchEnded(() => {
-          const result = evaluateDrawing();
-
-          if (!result.isValid) {
-            resetPaperplanes();
-          } else {
-            // 1. prevent more drawing
-            allowDrawing = false;
-
-            // 2. arrange the way out of planes
-            arrangeWayout = true;
-
-            // 3. animate the planes
-            _.flatten(paperplanes).forEach(
-              (paperplane) => {
-                // paperplane.animate();
-              }
-            );
-          }
-
-          isPressed = false;
-
-          mouseX = 0;
-          mouseY = 0;
-        });
-
-        canvas.mouseReleased((e) => {
-          if (!allowDrawing) {
-            e.preventDefault();
-            return;
-          }
-
-          isPressed = false;
-
-          mouseX = 0;
-          mouseY = 0;
-        });
-      }
-
-      function draw() {
-        // return;
-
-        if (!isMobileDevice) {
-          clear();
-
-          return;
-        } else {
-          document.body.style.backgroundImage = `url("/images/through-love.webp")`;
-        }
-
-        background(255);
-
-        perspective();
-
-        _.flatten(paperplanes).forEach(
-          (paperplane) => {
-            if (allowDrawing) {
-              paperplane.update();
-            }
-
-            paperplane.show();
-          }
-        );
-
-        if (isPressed) {
-          window.mouseHoveredDuration += 1;
-        }
-
-        if (arrangeWayout) {
-          const toppestPlane = _.flatten(
-            paperplanes
-          ).find(
-            (el) => el.type === "paperplane"
-          );
-
-          if (!toppestPlane) return;
-
-          toppestPlane.arrangeWayOut();
-
-          arrangeWayout = false;
-        }
-      }
-    </script>
+    <script src="index.js"></script>
   </body>
 </html>
