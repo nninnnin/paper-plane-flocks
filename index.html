@@ -21,10 +21,25 @@
         overflow: hidden;
       }
 
+      @keyframes movingBG {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
       body {
-        background-image: url("/images/through-love.webp");
         background-size: cover;
         background-position: right;
+
+        /* background-image: url("/images/through-love.webp"); */
+
+        animation: movingBG 10s linear infinite;
       }
 
       canvas {
@@ -260,13 +275,19 @@ https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js
       }
 
       function draw() {
+        // return;
+
         if (!isMobileDevice) {
           clear();
 
           return;
+        } else {
+          document.body.style.backgroundImage = `url("/images/through-love.webp")`;
         }
 
         background(255);
+
+        perspective();
 
         _.flatten(paperplanes).forEach(
           (paperplane) => {
