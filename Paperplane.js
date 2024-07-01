@@ -506,6 +506,7 @@ class Paperplane {
     );
 
     console.log("현재 angle", this.angle);
+
     console.log(
       "다음 angle",
       this.getNextAngle()

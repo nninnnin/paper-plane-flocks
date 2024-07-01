@@ -14,7 +14,7 @@ class GuideComponent extends HTMLElement {
     super();
 
     this.state = {
-      contents: guideContents['please-draw'],
+      contents: guideContents["please-draw"],
     };
 
     this.attachShadow({ mode: "open" });
@@ -24,7 +24,7 @@ class GuideComponent extends HTMLElement {
     this.render();
   }
 
-  setContent (contents) {
+  setContent(contents) {
     this.state.contents = contents;
     this.render();
   }
@@ -57,6 +57,21 @@ class GuideComponent extends HTMLElement {
 
           visibility: hidden;
         }
+
+        @keyframes fadeout {
+          0% {
+            opacity: 1;
+          }
+
+          100% {
+            opacity: 0;
+          }
+        }
+
+        .fade-out {
+          animation: fadeout 1.5s forwards;
+          animation-delay: 1s;
+        }
       </style>
 
       <div id='container'>
@@ -68,94 +83,75 @@ class GuideComponent extends HTMLElement {
     this.addEvents();
   }
 
-  addEvents () {
-    const inputs = this.shadowRoot.querySelectorAll('input');
+  async addEvents() {
+    const inputs =
+      this.shadowRoot.querySelectorAll("input");
 
-    inputs.forEach(input => {
-      console.log(input.value)
-      const inputValue = splitKoreanIntoGraphemes(input.value);
+    const results = await Promise.all(
+      Array.from(inputs).map(async (input) => {
+        const inputValue = Hangul.disassemble(
+          input.value
+        );
 
-      console.log(inputValue)
+        input.value = "";
 
-      input.value = '';
+        input.style.visibility = "visible";
 
-      input.style.visibility = 'visible';
+        function renderInputValue(
+          value,
+          charIndex,
+          endCallback
+        ) {
+          if (charIndex > value.length) {
+            endCallback();
 
-      function renderInputValue (value, charIndex) {
-        if (charIndex === value.length) return;
+            return true;
+          }
 
-        const currentSlice = value.slice(0, charIndex)
+          const currentSlice = value.slice(
+            0,
+            charIndex
+          );
 
-        console.log(currentSlice)
+          input.value =
+            Hangul.assemble(currentSlice);
 
-        input.value = currentSlice.join('');
+          setTimeout(() => {
+            renderInputValue(
+              value,
+              charIndex + 1,
+              endCallback
+            );
+          }, 50);
+        }
 
-        renderInputValue(value, charIndex + 1)
-      }
+        return new Promise((resolve) => {
+          renderInputValue(inputValue, 1, () => {
+            resolve(true);
+          });
+        });
+      })
+    );
 
-      renderInputValue(inputValue, 1);
-    })
-  }
-}
+    console.log("end!", results);
 
-function splitKoreanIntoGraphemes(str) {
-  const result = [];
+    const isFinished = results.every(
+      (result) => result
+    );
 
-  let i = 0;
-  while (i < str.length) {
-    const char = str.charAt(i);
-    const charCode = str.charCodeAt(i);
+    if (isFinished) {
+      inputs.forEach((input) =>
+        input.classList.add("fade-out")
+      );
 
-    if (charCode >= 0xAC00 && charCode <= 0xD7A3) {
-      // 한글 음절인 경우
-      let syllable = char;
-      let nextCharCode = str.charCodeAt(i + 1);
-
-      // 다음 문자도 한글이고 종성이 없는 경우 (이, 기, 그 등)
-      if (nextCharCode >= 0xAC00 && nextCharCode <= 0xD7A3) {
-        const nextSyllable = str.charAt(i + 1);
-        const combinedSyllable = syllable + nextSyllable;
-        const decomposed = decomposeHangul(combinedSyllable); // 음절을 음소(자모)로 분해하기
-        result.push(...decomposed); // 분해된 음소(자모)를 결과 배열에 추가
-        i += 2; // 다음 음절로 이동
-      } else {
-        // 종성이 있는 경우 또는 다음 문자가 한글이 아닌 경우
-        const decomposed = decomposeHangul(syllable); // 음절을 음소(자모)로 분해하기
-        result.push(...decomposed); // 분해된 음소(자모)를 결과 배열에 추가
-        i++; // 다음 문자로 이동
-      }
-    } else {
-      // 한글 음절이 아닌 경우 그대로 추가
-      result.push(char);
-      i++; // 다음 문자로 이동
+      setTimeout(() => {
+        window.preventDraw = false;
+      }, 2500);
     }
   }
-
-  return result;
-}
-
-function decomposeHangul(syllable) {
-  const result = [];
-  const code = syllable.charCodeAt(0) - 0xAC00;
-
-  const jongSung = code % 28; // 종성
-  const jungSung = ((code - jongSung) / 28) % 21; // 중성
-  const choSung = (((code - jongSung) / 28) - jungSung) / 21; // 초성
-
-  if (choSung !== 0) {
-    result.push(String.fromCharCode(0x1100 + choSung)); // 초성
-  }
-
-  result.push(String.fromCharCode(0x1161 + jungSung)); // 중성
-
-  if (jongSung !== 0) {
-    result.push(String.fromCharCode(0x11A7 + jongSung)); // 종성
-  }
-
-  return result;
 }
 
 customElements.define(
-  'guide-component',
+  "guide-component",
   GuideComponent
-)
+);
