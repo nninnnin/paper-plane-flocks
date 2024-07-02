@@ -3,34 +3,37 @@ const guideContents = {
     ko: "이 미디어는 데스크탑 화면 크기를 지원하지 않습니다.",
     en: "This media does not support desktop viewports",
   },
-  "please-draw": {
+  "1-0": {
+    ko: "반가워요! PAPER PLANE FLOCKS에 오신 것을 \n 환영합니다.",
+    en: "Welcome to PPF!",
+  },
+  "2-1": {
+    ko: "삐딱한 분이시네요.",
+    en: "What's wrong with you?",
+  },
+  "3-0": {
     ko: "종이비행기들의 행로를 그려주세요.",
     en: "Draw the path of the paper planes.",
   },
 };
 
-class GuideComponent extends HTMLElement {
+class GuideComponent extends Base {
   constructor() {
     super();
 
     this.state = {
-      contents: guideContents["please-draw"],
+      contents: guideContents["1-0"],
     };
-
-    this.attachShadow({ mode: "open" });
   }
 
   connectedCallback() {
     this.render();
   }
 
-  setContent(contents) {
-    this.state.contents = contents;
-    this.render();
-  }
-
   render() {
-    this.shadowRoot.innerHTML = `
+    this.resetStyles();
+
+    this.shadowRoot.innerHTML += `
       <style>
         #container {
           display: flex;
@@ -44,18 +47,6 @@ class GuideComponent extends HTMLElement {
           position: fixed;
           top: 0;
           left: 0;
-        }
-
-        input {
-          width: 100%;
-          display: block;
-
-          text-align: center;
-          line-height: 1.5em;
-
-          border: none;
-
-          visibility: hidden;
         }
 
         @keyframes fadeout {
@@ -72,11 +63,41 @@ class GuideComponent extends HTMLElement {
           animation: fadeout 1.5s forwards;
           animation-delay: 1s;
         }
+
+        .text-wrapper {
+          width: 100%;
+          display: block;
+
+          text-align: center;
+          line-height: 1.5em;
+
+          border: none;
+
+          visibility: hidden;
+
+          padding: 0 10%;
+          word-break: keep-all;
+
+          position: relative;
+        }
+
+        .touch-icon {
+          width: 16px;
+          height: 16px;
+
+          position: absolute;
+          right: 0;
+          bottom: 0;
+
+          transform: translate(-100%, 100%);
+          margin-left: auto;
+      }
+        }
       </style>
 
       <div id='container'>
-        <input type='text' value='${this.state.contents.en}'>
-        <input type='text' value='${this.state.contents.ko}'>
+        <div class='text-wrapper'>${this.state.contents.en}</div>
+        <div class='text-wrapper'>${this.state.contents.ko}</div>
       </div>
     `;
 
@@ -84,53 +105,61 @@ class GuideComponent extends HTMLElement {
   }
 
   async addEvents() {
-    const inputs =
-      this.shadowRoot.querySelectorAll("input");
+    const wrappers =
+      this.shadowRoot.querySelectorAll(
+        ".text-wrapper"
+      );
 
     const results = await Promise.all(
-      Array.from(inputs).map(async (input) => {
-        const inputValue = Hangul.disassemble(
-          input.value
-        );
-
-        input.value = "";
-
-        input.style.visibility = "visible";
-
-        function renderInputValue(
-          value,
-          charIndex,
-          endCallback
-        ) {
-          if (charIndex > value.length) {
-            endCallback();
-
-            return true;
-          }
-
-          const currentSlice = value.slice(
-            0,
-            charIndex
+      Array.from(wrappers).map(
+        async (wrapper) => {
+          const inputValue = Hangul.disassemble(
+            wrapper.innerHTML
           );
 
-          input.value =
-            Hangul.assemble(currentSlice);
+          wrapper.innerHTML = "";
 
-          setTimeout(() => {
-            renderInputValue(
-              value,
-              charIndex + 1,
-              endCallback
+          wrapper.style.visibility = "visible";
+
+          function renderInputValue(
+            value,
+            charIndex,
+            endCallback
+          ) {
+            if (charIndex > value.length) {
+              endCallback();
+
+              return true;
+            }
+
+            const currentSlice = value.slice(
+              0,
+              charIndex
             );
-          }, 50);
-        }
 
-        return new Promise((resolve) => {
-          renderInputValue(inputValue, 1, () => {
-            resolve(true);
+            wrapper.innerHTML =
+              Hangul.assemble(currentSlice);
+
+            setTimeout(() => {
+              renderInputValue(
+                value,
+                charIndex + 1,
+                endCallback
+              );
+            }, 50);
+          }
+
+          return new Promise((resolve) => {
+            renderInputValue(
+              inputValue,
+              1,
+              () => {
+                resolve(true);
+              }
+            );
           });
-        });
-      })
+        }
+      )
     );
 
     console.log("end!", results);
@@ -140,14 +169,38 @@ class GuideComponent extends HTMLElement {
     );
 
     if (isFinished) {
-      inputs.forEach((input) =>
-        input.classList.add("fade-out")
-      );
+      // inputs.forEach((input) =>
+      //   input.classList.add("fade-out")
+      // );
 
-      setTimeout(() => {
-        window.preventDraw = false;
-      }, 2500);
+      this.allowInteract();
+
+      // setTimeout(() => {
+      //   window.preventDraw = false;
+      // }, 2500);
     }
+  }
+
+  allowInteract() {
+    const wrappers =
+      this.shadowRoot.querySelectorAll(
+        ".text-wrapper"
+      );
+    const lastWrapper =
+      wrappers[wrappers.length - 1];
+
+    console.log(lastWrapper);
+
+    const image = new Image();
+    image.src = "/icons/touch--white.svg";
+    image.classList.add("touch-icon");
+
+    lastWrapper.appendChild(image);
+  }
+
+  setContent(contents) {
+    this.state.contents = contents;
+    this.render();
   }
 }
 
